@@ -98,21 +98,23 @@ public class BattleSystem : MonoBehaviour
     public void PlayerPowerAttack()
     {
         powerAttackCount++;
+        Debug.Log($"Усиленная атака. powerAttackCount = {powerAttackCount}");
+
         canAttack = false;
         Attack();
-        playerDamage = сharacteristics.baseAttack*2;
+        playerDamage = сharacteristics.baseAttack * 2;
         Invoke("EnemyAttack", 1f);
     }
 
     void PlayerAttack()
     {
         attackCount++;
+        Debug.Log($"Обычная атака. attackCount = {attackCount}");
+
         canAttack = false;
         Attack();
-        //playerDamage = 50;
         playerDamage = сharacteristics.baseAttack;
-        // После этого запускаем анимацию врага
-        Invoke("EnemyAttack", 1f); // Время ожидания для завершения анимации атаки игрока
+        Invoke("EnemyAttack", 1f);
     }
 
     public void BattleEnd()
