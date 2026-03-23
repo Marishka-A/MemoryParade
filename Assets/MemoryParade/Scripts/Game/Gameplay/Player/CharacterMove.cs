@@ -8,6 +8,8 @@ public class CharacterMove : MonoBehaviour
 {
     private Animator _animator;
     private GameObject _gameObject;
+
+    public bool canMove = true;
     
     void Start()
     {
@@ -15,7 +17,7 @@ public class CharacterMove : MonoBehaviour
         _gameObject = GameObject.Find("BattleCanvas");
         if (_animator == null)
         {
-            Debug.LogError("Animator не найден на объекте " + gameObject.name);
+            Debug.LogError("Animator пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ " + gameObject.name);
         }
 
         _animator.SetFloat("X", 0);
@@ -26,9 +28,12 @@ public class CharacterMove : MonoBehaviour
     {
         //if (SceneManager.GetActiveScene().name == Scenes.GAMEPLAY)
         //    _gameObject.SetActive(false);
+        if (!canMove)
+            return;
+
         if (_animator == null)
         {
-            Debug.LogWarning("Animator равен null на объекте " + gameObject.name);
+            Debug.LogWarning("Animator пїЅпїЅпїЅпїЅпїЅ null пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ " + gameObject.name);
             return;
         }
 
@@ -39,11 +44,11 @@ public class CharacterMove : MonoBehaviour
             _animator.SetFloat("X", move.x);
             _animator.SetFloat("Y", move.y);
 
-            transform.Translate(move * 0.02f); // скорость
+            transform.Translate(move * 0.02f); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         }
         else
         {
-            // Обноляем основные параметры, для того, чтобы персонаж стоял
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
             _animator.SetFloat("X", 0);
             _animator.SetFloat("Y", 0);
         }

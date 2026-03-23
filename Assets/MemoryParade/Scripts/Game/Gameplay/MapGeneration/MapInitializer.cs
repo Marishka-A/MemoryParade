@@ -43,8 +43,7 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
                 SpawnPlayerInRoom(player, rooms[0]);
             }
 
-            // Пока оставляем врагов выключенными, чтобы не возвращать вылет
-            // EnemyPositionGenerator.SpawnEnemies(SlimePrefab, 5, rooms, CellSize);
+            EnemyPositionGenerator.SpawnEnemies(SlimePrefab, 5, rooms, CellSize);
             // EnemyPositionGenerator.SpawnEnemies(MummyPrefab, 5, rooms, CellSize);
         }
 

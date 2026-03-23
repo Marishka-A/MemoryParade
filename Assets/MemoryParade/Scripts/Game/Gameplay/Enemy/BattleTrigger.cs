@@ -117,7 +117,7 @@ public class BattleTrigger : MonoBehaviour
         float halfHeight = boxCollider.size.y / 2 * obj.transform.localScale.y;
 
         Vector3 shiftPositionPlayer = new Vector3(2.26f * cameraApp, -0.08f * cameraApp + halfHeight, 0);
-        Vector3 shiftPositionEnemy = new Vector3(-2.13f * cameraApp, -0.08f * cameraApp + halfHeight, 0);
+        Vector3 shiftPositionEnemy = new Vector3(-1.85f * cameraApp, -0.08f * cameraApp + halfHeight, 0);
         Vector3 pos = battleSystem.battleCanvas.transform.position;
         pos.z = 0;
 
@@ -129,6 +129,20 @@ public class BattleTrigger : MonoBehaviour
 
     void StartBattle()
     {
+        if (playerMove != null)
+        {
+            playerMove.canMove = false;
+            playerMove.enabled = false;
+        }
+
+        var rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+
         if (battleSystem == null || battleSystem.battleCanvas == null || player == null || playerMove == null)
             return;
 
@@ -158,11 +172,22 @@ public class BattleTrigger : MonoBehaviour
 
     void EndBattle()
     {
+        if (playerMove != null)
+        {
+            playerMove.enabled = true;
+            playerMove.canMove = true;
+        }
+
+        var rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
+
         if (battleSystem == null || battleSystem.battleCanvas == null || player == null)
             return;
 
         traesure = true;
-        Debug.Log("EndBattle");
 
         Vector3 pos = battleSystem.battleCanvas.transform.position;
         pos.z = 0;
@@ -172,11 +197,16 @@ public class BattleTrigger : MonoBehaviour
 
         battleSystem.battleCanvas.SetActive(false);
 
-        if (playerMove != null)
-            playerMove.enabled = true;
-
         if (characterAttack != null)
             characterAttack.enabled = false;
+
+        // ВАЖНО — вернуть Animator
+        var anim = player.GetComponent<Animator>();
+        if (anim != null)
+        {
+            anim.Rebind();
+            anim.Update(0f);
+        }
 
         if (spriteRendererEnemy != null)
             spriteRendererEnemy.sortingOrder = 1;

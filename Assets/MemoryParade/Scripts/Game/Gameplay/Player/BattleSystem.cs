@@ -107,9 +107,10 @@ public class BattleSystem : MonoBehaviour
             PlayerAttack();
         }
         else if (playerAnimator != null && powerAttack != null && superAttack != null &&
-                 !powerAttack.click && !superAttack.click)
+                 !powerAttack.click && !superAttack.click && !BattleIsEnd)
         {
-            playerAnimator.SetBool("turn", false);
+            if (!playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
+                playerAnimator.SetBool("turn", false);
         }
     }
 
@@ -125,8 +126,10 @@ public class BattleSystem : MonoBehaviour
     {
         if (playerAnimator == null) return;
 
+        playerAnimator.ResetTrigger("Attack");
         playerAnimator.SetBool("turn", true);
         playerAnimator.SetTrigger("Attack");
+        playerAnimator.Update(0f);
     }
 
     public void PlayerSuperAttack()
