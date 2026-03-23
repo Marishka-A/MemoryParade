@@ -17,19 +17,24 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.Player
         {
             _battleSystem = FindAnyObjectByType<BattleSystem>();
             _button = GetComponent<Button>();
-            _startSprite = _button.image.sprite;
+
+            if (_button != null && _button.image != null)
+                _startSprite = _button.image.sprite;
 
             RefreshButtonView();
         }
 
         private void Update()
         {
-            if (_battleSystem == null || _button == null)
-                return;
+            if (_battleSystem == null)
+                _battleSystem = FindAnyObjectByType<BattleSystem>();
+
+            if (_button == null)
+                _button = GetComponent<Button>();
 
             RefreshButtonView();
 
-            if (click)
+            if (click && _battleSystem != null)
             {
                 _battleSystem.attackCount = 0;
                 click = false;
@@ -39,12 +44,19 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.Player
 
         private void RefreshButtonView()
         {
+            if (_battleSystem == null || _button == null)
+                return;
+
             bool isAvailable = _battleSystem.attackCount >= 3;
 
             _button.interactable = isAvailable;
-            _button.image.sprite = isAvailable && activeSprite != null
-                ? activeSprite
-                : _startSprite;
+
+            if (_button.image != null)
+            {
+                _button.image.sprite = isAvailable && activeSprite != null
+                    ? activeSprite
+                    : _startSprite;
+            }
         }
 
         public void OnClick()

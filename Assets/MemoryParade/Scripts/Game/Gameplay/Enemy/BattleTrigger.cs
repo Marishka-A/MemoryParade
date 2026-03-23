@@ -1,7 +1,6 @@
 ﻿using Assets.MemoryParade.Scripts.Game.Gameplay.Enemy;
 using Assets.MemoryParade.Scripts.Game.GameRoot;
 using Cinemachine;
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,7 +8,6 @@ using UnityEngine.SceneManagement;
 public class BattleTrigger : MonoBehaviour
 {
     private Follow enemyFollow;
-    //private GameObject battleCanvas;
     private CharacterMove playerMove;
     private GameObject player;
     private CharacterAttack characterAttack;
@@ -20,76 +18,104 @@ public class BattleTrigger : MonoBehaviour
 
     private CinemachineVirtualCamera cinemachineVirtualCamera;
     private Camera main;
-    private Vector3 startPos;
 
     private bool init = false;
     private bool traesure = false;
 
+    [SerializeField] private float battleStartDistance = 0.8f;
+
     void Init()
+{
+    enemyFollow = GetComponent<Follow>();
+
+    if (enemyFollow == null)
     {
-        init = true;
-        enemyFollow = GetComponent<Follow>();
-
-        if (enemyFollow == null)
-        {
-            Debug.LogWarning($"Не найден скрипт Follow");
-        }
-
-        //if (battleCanvas == null)
-        //{
-        //    Debug.LogWarning($"Не найден BattleCanvas");
-        //}
-        player = GameObject.FindGameObjectWithTag("Player");
-        if(player == null)
-            Debug.LogWarning($"player Не найден");
-        playerMove = player.GetComponent<CharacterMove>();
-        characterAttack = FindObjectOfType<CharacterAttack>();
-
-        cinemachineVirtualCamera = FindAnyObjectByType<CinemachineVirtualCamera>();
-
-        battleSystem = player.GetComponent<BattleSystem>();
-        spriteRendererEnemy = gameObject.GetComponent<SpriteRenderer>();
-        startPos = playerMove.transform.position;
-        main = FindObjectOfType<Camera>();
+        Debug.LogWarning("Не найден скрипт Follow");
+        return;
     }
+
+    player = GameObject.FindGameObjectWithTag("Player");
+    if (player == null)
+    {
+        Debug.LogWarning("Player не найден");
+        return;
+    }
+
+    playerMove = player.GetComponent<CharacterMove>();
+    if (playerMove == null)
+    {
+        Debug.LogWarning("Не найден CharacterMove у Player");
+        return;
+    }
+
+    characterAttack = FindObjectOfType<CharacterAttack>();
+    cinemachineVirtualCamera = FindAnyObjectByType<CinemachineVirtualCamera>();
+
+    battleSystem = player.GetComponent<BattleSystem>();
+    if (battleSystem == null)
+    {
+        Debug.LogWarning("Не найден BattleSystem у Player");
+        return;
+    }
+
+    spriteRendererEnemy = gameObject.GetComponent<SpriteRenderer>();
+    main = FindObjectOfType<Camera>();
+
+    init = true;
+}
+
 
     void Update()
     {
         if (!init) Init();
-        Debug.LogWarning($"init {init}");
+        if (!init) return;
+
+        if (enemyFollow == null || playerMove == null || battleSystem == null || battleSystem.battleCanvas == null)
+            return;
+
         enemyFollow.SetCurrentFollowEnemy(this);
-        //battleCanvas = enemyFollow.battleCanvas;
-        startPos = playerMove.transform.position;
-        if (!battleSystem.BattleIsEnd && enemyFollow.canBattle && !battleSystem.battleCanvas.activeSelf)
+
+        float distanceToPlayer = Vector2.Distance(playerMove.transform.position, transform.position);
+
+        if (!battleSystem.BattleIsEnd &&
+            enemyFollow.canBattle &&
+            !battleSystem.battleCanvas.activeSelf &&
+            distanceToPlayer < 0.8f)
         {
             battleSystem.SetCurrentEnemyAnimator(this);
             StartBattle();
         }
+
         if (traesure && Vector2.Distance(playerMove.transform.position, enemyFollow.transform.position) < 0.1f)
         {
-            //PlayerСharacteristics.Instance.numberOfWins = PlayerСharacteristics.Instance.numberOfWins + 1;
             traesure = false;
             PlayerСharacteristics.Instance.AddScore();
             Destroy(gameObject);
         }
+
         if (battleSystem.BattleIsEnd && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle)
         {
             StartCoroutine(WaiterEnemyDie());
         }
+
         if (battleSystem.PlayerLose && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle)
         {
             StartCoroutine(WaiterPlayerDie());
         }
     }
+
     public void ChangePositionGameObject(GameObject obj)
     {
-        //учет приближения камеры
+        if (obj == null || battleSystem == null || battleSystem.battleCanvas == null)
+            return;
+
         float cameraApp = 1.533734f / 3.5f;
 
         BoxCollider2D boxCollider = obj.GetComponent<BoxCollider2D>();
+        if (boxCollider == null) return;
+
         float halfHeight = boxCollider.size.y / 2 * obj.transform.localScale.y;
 
-        //выравнивает
         Vector3 shiftPositionPlayer = new Vector3(2.26f * cameraApp, -0.08f * cameraApp + halfHeight, 0);
         Vector3 shiftPositionEnemy = new Vector3(-2.13f * cameraApp, -0.08f * cameraApp + halfHeight, 0);
         Vector3 pos = battleSystem.battleCanvas.transform.position;
@@ -100,79 +126,98 @@ public class BattleTrigger : MonoBehaviour
         else if (obj.CompareTag("Enemy"))
             obj.transform.position = pos + shiftPositionEnemy;
     }
+
     void StartBattle()
     {
-        Debug.Log($"StartBattle");
-        //// Увеличиваем обу камеры, для того, чтобы приблизить игрока и врага
-        //cinemachineVirtualCamera.m_Lens.OrthographicSize = BattleCanvasManager.orthographicSize;
+        if (battleSystem == null || battleSystem.battleCanvas == null || player == null || playerMove == null)
+            return;
+
+        Debug.Log("StartBattle");
+
         UpdateCamera(true);
 
-        // Показываем окно боя
         battleSystem.battleCanvas.SetActive(true);
-        // Отключаем скрипт для передвижения персонажа и включаем скрипт дляя атаки
+
         ChangePositionGameObject(player);
         playerMove.enabled = false;
-        //двигаем персонажа на платформу
-        characterAttack.enabled = true;
+
+        if (characterAttack != null)
+            characterAttack.enabled = true;
+
         ChangePositionGameObject(gameObject);
-        //characterAttack.transform.position = new Vector3(startPos.x + 1, (float)(startPos.y + 0.37), 0);
-        // Отключаем скрипт для врага. Чтобы он не следовал за персонажем
+
         enemyFollow.enabled = false;
 
-        // Двигаем врага на платформу
         battleSystem.BattleEnd();
-        //enemyFollow.transform.position = new Vector3((float)(characterAttack.transform.position.x -0.8), (float)(characterAttack.transform.position.y + 0.4), 0);
-        spriteRendererEnemy.sortingOrder = 5;
+
+        if (spriteRendererEnemy != null)
+            spriteRendererEnemy.sortingOrder = 5;
+
         BattleIsStart = true;
     }
+
     void EndBattle()
     {
-        // Можно собрать кристалл
+        if (battleSystem == null || battleSystem.battleCanvas == null || player == null)
+            return;
+
         traesure = true;
-        Debug.Log($"EndBattle");
-        // Возвращаем все на начальные позиции
-        //cinemachineVirtualCamera.m_Lens.OrthographicSize = (float)3.5;
+        Debug.Log("EndBattle");
+
         Vector3 pos = battleSystem.battleCanvas.transform.position;
         pos.z = 0;
         player.transform.position = pos;
-        // Включаем камеру персонажа
+
         UpdateCamera(false);
 
-        // выключаем окно боя
         battleSystem.battleCanvas.SetActive(false);
-        // Включаем скрипт для передвижения персонажа и выключаем скрипт дляя атаки
-        playerMove.enabled = true;
-        characterAttack.enabled = false;
-        spriteRendererEnemy.sortingOrder = 1;
-        
+
+        if (playerMove != null)
+            playerMove.enabled = true;
+
+        if (characterAttack != null)
+            characterAttack.enabled = false;
+
+        if (spriteRendererEnemy != null)
+            spriteRendererEnemy.sortingOrder = 1;
+
         battleSystem.BattleIsEnd = false;
-        /*main.Render();*/
+        BattleIsStart = false;
         init = false;
     }
 
     private void UpdateCamera(bool zoom)
     {
+        if (main == null) main = Camera.main;
+        if (main == null) return;
+
         if (zoom)
         {
-            // Отключаем камеру персонажа
-            cinemachineVirtualCamera.enabled = false;
+            if (cinemachineVirtualCamera != null)
+                cinemachineVirtualCamera.enabled = false;
+
             main.orthographicSize = BattleCanvasManager.orthographicSize;
         }
         else
         {
-            main.orthographicSize = (float)3.5;
-            Camera.main.transform.position = player.transform.position;
-            Camera.main.ResetAspect();
-            cinemachineVirtualCamera.enabled = true;
+            main.orthographicSize = 3.5f;
+
+            if (player != null)
+                main.transform.position = new Vector3(player.transform.position.x, player.transform.position.y, main.transform.position.z);
+
+            main.ResetAspect();
+
+            if (cinemachineVirtualCamera != null)
+                cinemachineVirtualCamera.enabled = true;
         }
-        var brain = Camera.main.GetComponent<CinemachineBrain>();
-        brain.ManualUpdate(); // Принудительное обновление виртуальной камеры
-        //Camera.main.Render();
+
+        var brain = main.GetComponent<CinemachineBrain>();
+        if (brain != null)
+            brain.ManualUpdate();
     }
-    
+
     IEnumerator WaiterEnemyDie()
     {
-        Debug.Log($"Waiter");
         enemyFollow.canBattle = false;
         yield return new WaitForSeconds(3f);
         EndBattle();
@@ -185,4 +230,3 @@ public class BattleTrigger : MonoBehaviour
         SceneTransitionManager.Instance.GoToScene(Scenes.LOBBY);
     }
 }
-

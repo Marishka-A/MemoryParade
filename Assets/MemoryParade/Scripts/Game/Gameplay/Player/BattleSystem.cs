@@ -1,22 +1,20 @@
 ﻿using Assets.MemoryParade.Scripts.Game.Gameplay.Player;
-using System.Collections;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Assets.MemoryParade.Scripts.Game.GameRoot;
 
 public class BattleSystem : MonoBehaviour
 {
-    private TextMeshProUGUI playerHPText;
-    private TextMeshProUGUI enemyHPText;
+    [SerializeField] private TextMeshProUGUI playerHPText;
+    [SerializeField] private TextMeshProUGUI enemyHPText;
 
     public int attackCount = 0;
     public int powerAttackCount = 0;
 
     public GameObject battleCanvas;
-    private int playerHP;// = 100;
+
+    private int playerHP;
     private int enemyHP = 100;
     private int playerDamage;
 
@@ -35,54 +33,98 @@ public class BattleSystem : MonoBehaviour
 
     void Start()
     {
-        playerAnimator = GetComponent<Animator>(); // Предполагаем, что скрипт прикреплен к объекту игрока
-        //enemyAnimator = GameObject.Find("Mummy_0").GetComponent<Animator>(); // Найдите объект врага по имени
-
+        playerAnimator = GetComponent<Animator>();
         battle = FindAnyObjectByType<BattleTrigger>();
+        сharacteristics = PlayerСharacteristics.Instance;
 
-        сharacteristics = PlayerСharacteristics.Instance;//FindAnyObjectByType<PlayerСharacteristics>();
-
-        //battleCanvas = GameObject.Find("BattleCanvas");
+        // Ищем BattleCanvas даже если он неактивен
         if (battleCanvas == null)
         {
-            Debug.LogWarning($"Не найден BattleCanvas");
+            Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
+            foreach (var canvas in canvases)
+            {
+                if (canvas.name == "BattleCanvas")
+                {
+                    battleCanvas = canvas.gameObject;
+                    break;
+                }
+            }
         }
-        playerHP = сharacteristics.healthPoints;
 
-        playerHPText = GameObject.Find("PlayerHP").GetComponent<TextMeshProUGUI>();
-        enemyHPText = GameObject.Find("EnemyHP").GetComponent<TextMeshProUGUI>();
+        if (battleCanvas == null)
+        {
+            Debug.LogError("Не найден BattleCanvas");
+        }
+
+        if (сharacteristics != null)
+            playerHP = сharacteristics.healthPoints;
+        else
+            playerHP = 100;
+
+        if (playerHPText == null)
+        {
+            var allTexts = Resources.FindObjectsOfTypeAll<TextMeshProUGUI>();
+            foreach (var text in allTexts)
+            {
+                if (text.name == "PlayerHP")
+                {
+                    playerHPText = text;
+                    break;
+                }
+            }
+        }
+
+        if (enemyHPText == null)
+        {
+            var allTexts = Resources.FindObjectsOfTypeAll<TextMeshProUGUI>();
+            foreach (var text in allTexts)
+            {
+                if (text.name == "EnemyHP")
+                {
+                    enemyHPText = text;
+                    break;
+                }
+            }
+        }
 
         powerAttack = FindAnyObjectByType<PowerAttack>();
         superAttack = FindAnyObjectByType<SuperAttack>();
-        
-        if (SceneManager.GetActiveScene().name == Scenes.GAMEPLAY)
-            battleCanvas.SetActive(false);
 
+        if (SceneManager.GetActiveScene().name == Scenes.GAMEPLAY && battleCanvas != null)
+            battleCanvas.SetActive(false);
     }
 
     void Update()
     {
-        if (playerHPText != null && enemyHPText != null)
-        {
+        if (playerHPText != null)
             playerHPText.text = playerHP.ToString();
+
+        if (enemyHPText != null)
             enemyHPText.text = enemyHP.ToString();
-        }
-        if (Input.GetKeyDown(KeyCode.Space) && canAttack && battle.BattleIsStart)
+
+        if (Input.GetKeyDown(KeyCode.Space) && canAttack && battle != null && battle.BattleIsStart)
         {
             PlayerAttack();
         }
-        else if (!powerAttack.click && !superAttack.click)
+        else if (playerAnimator != null && powerAttack != null && superAttack != null &&
+                 !powerAttack.click && !superAttack.click)
         {
             playerAnimator.SetBool("turn", false);
         }
     }
+
     public void SetCurrentEnemyAnimator(BattleTrigger enemy)
     {
+        if (enemy == null) return;
+
         enemyAnimator = enemy.GetComponent<Animator>();
         battle = enemy;
     }
+
     public void Attack()
     {
+        if (playerAnimator == null) return;
+
         playerAnimator.SetBool("turn", true);
         playerAnimator.SetTrigger("Attack");
     }
@@ -92,7 +134,7 @@ public class BattleSystem : MonoBehaviour
         canAttack = false;
         Attack();
         playerDamage = 50;
-        Invoke("EnemyAttack", 1f);
+        Invoke(nameof(EnemyAttack), 1f);
     }
 
     public void PlayerPowerAttack()
@@ -103,7 +145,7 @@ public class BattleSystem : MonoBehaviour
         canAttack = false;
         Attack();
         playerDamage = сharacteristics.baseAttack * 2;
-        Invoke("EnemyAttack", 1f);
+        Invoke(nameof(EnemyAttack), 1f);
     }
 
     void PlayerAttack()
@@ -114,65 +156,85 @@ public class BattleSystem : MonoBehaviour
         canAttack = false;
         Attack();
         playerDamage = сharacteristics.baseAttack;
-        Invoke("EnemyAttack", 1f);
+        Invoke(nameof(EnemyAttack), 1f);
     }
 
     public void BattleEnd()
-    {        
+    {
         powerAttackCount = 0;
         attackCount = 0;
         canAttack = true;
         enemyHP = 100;
     }
+
     void EnemyDie()
     {
+        if (enemyAnimator == null) return;
+
         enemyAnimator.SetBool("die", true);
-        //enemyAnimator.transform.position = new Vector3(enemyAnimator.transform.position.x, (float)(enemyAnimator.transform.position.y - 0.3), 0);
-        Invoke("Treasure", 3f);
+        Invoke(nameof(Treasure), 3f);
     }
 
     void PlayerDie()
     {
+        if (playerAnimator == null) return;
+
         playerAnimator.SetTrigger("die");
-        playerAnimator.transform.position = new Vector3(playerAnimator.transform.position.x, (float)(playerAnimator.transform.position.y - 0.3), 0);
+        playerAnimator.transform.position = new Vector3(
+            playerAnimator.transform.position.x,
+            playerAnimator.transform.position.y - 0.3f,
+            0
+        );
     }
+
     void Treasure()
     {
+        if (enemyAnimator == null) return;
+
         enemyAnimator.SetTrigger("treasure");
         enemyAnimator.transform.localScale = new Vector3(1.5f, 1.5f, 0);
     }
+
     public void EnemyAttack()
     {
         enemyHP -= playerDamage;
+
         if (enemyHP <= 0)
         {
             enemyHP = 0;
             Debug.Log("Вы выиграли");
             EnemyDie();
             BattleIsEnd = true;
-            сharacteristics.healthPoints = playerHP;
-            //BattleEnd();
-            playerAnimator.SetTrigger("battleIsEnd");
+
+            if (сharacteristics != null)
+                сharacteristics.healthPoints = playerHP;
+
+            if (playerAnimator != null)
+                playerAnimator.SetTrigger("battleIsEnd");
+
             return;
         }
-        enemyAnimator.SetBool("turn", true);
+
+        if (enemyAnimator != null)
+            enemyAnimator.SetBool("turn", true);
+
         canAttack = true;
-        // Возврат врага в базовую анимацию
-        Invoke("ResetEnemyAnimation", 1f); // Время ожидания для завершения анимации атаки врага
+        Invoke(nameof(ResetEnemyAnimation), 1f);
     }
 
     void ResetEnemyAnimation()
     {
-        enemyAnimator.SetBool("turn", false);
-        int damage = Random.Range(1, 9); // Урон от врага 1-9
+        if (enemyAnimator != null)
+            enemyAnimator.SetBool("turn", false);
+
+        int damage = Random.Range(1, 9);
         playerHP -= damage;
+
         if (playerHP <= 0)
         {
             playerHP = 0;
             Debug.Log("Вы проиграли");
-            //playerAnimator.SetTrigger("battleIsEnd");
             PlayerDie();
-            //BattleEnd();
             PlayerLose = true;
         }
     }
