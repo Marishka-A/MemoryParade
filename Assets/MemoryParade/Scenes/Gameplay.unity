@@ -67057,6 +67057,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73ced5edb3f2fc445b284ec08466e5d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canMove: 1
 --- !u!114 &273555607
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67081,6 +67082,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abfd1d120780f124d81903fc2446300c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerHPText: {fileID: 0}
+  enemyHPText: {fileID: 0}
   attackCount: 0
   powerAttackCount: 0
   battleCanvas: {fileID: 0}
@@ -67432,6 +67435,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BattleIsStart: 0
+  battleStartDistance: 0.8
 --- !u!1 &721259718
 GameObject:
   m_ObjectHideFlags: 0
@@ -67491,7 +67495,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
@@ -67579,7 +67583,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49179ff907fba894bba40a13a573ec14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeSprite: {fileID: 0}
+  activeSprite: {fileID: -322373454, guid: ca6286e2ccf9a6b4bbbaed7842ade54a, type: 3}
   click: 0
 --- !u!1 &731013335
 GameObject:
@@ -67935,7 +67939,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &807567207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69212,7 +69216,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1865237696}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b9a9d8a84877fa4d81bbe2fafd300c6, type: 3}
   m_Name: 
@@ -69301,7 +69305,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
@@ -69389,7 +69393,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb353012fe5dd7a46b4b86ad4e282f38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeSprite: {fileID: 0}
+  activeSprite: {fileID: -504933632, guid: b871c2edabe42204caa800c2363c1ebd, type: 3}
   click: 0
 --- !u!1 &1996948200
 GameObject:
@@ -69589,6 +69593,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abfd1d120780f124d81903fc2446300c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerHPText: {fileID: 0}
+  enemyHPText: {fileID: 0}
   attackCount: 0
   powerAttackCount: 0
   battleCanvas: {fileID: 807567206}
@@ -69606,6 +69612,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73ced5edb3f2fc445b284ec08466e5d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canMove: 1
 --- !u!95 &1699650887607359303
 Animator:
   serializedVersion: 5

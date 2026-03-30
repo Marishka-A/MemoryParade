@@ -57,19 +57,20 @@ public class CharacterMove : MonoBehaviour
     private Vector2 GetMove()
     {
         Vector2 move = Vector2.zero;
-        if (Keyboard.current.upArrowKey.isPressed)
+
+        if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed)
         {
             move += new Vector2(0, 1);
         }
-        if (Keyboard.current.downArrowKey.isPressed)
+        if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed)
         {
             move += new Vector2(0, -1);
         }
-        if (Keyboard.current.leftArrowKey.isPressed)
+        if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
         {
             move += new Vector2(-1, 0);
         }
-        if (Keyboard.current.rightArrowKey.isPressed)
+        if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
         {
             move += new Vector2(1, 0);
         }
