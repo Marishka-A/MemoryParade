@@ -3,9 +3,6 @@ using System.Collections.Generic;
 
 namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
 {
-    /// <summary>
-    /// Загружает префабы карты
-    /// </summary>
     public class MapInitializer : MonoBehaviour
     {
         [Header("Prefabs")]
@@ -17,12 +14,16 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
         public GameObject wallAnglePrefab;
         public GameObject emptyWallPrefab;
 
-        // Игрок на сцене
+        [Header("Player")]
         public GameObject player;
 
-        // Враги
+        [Header("Enemies")]
         public GameObject SlimePrefab;
-        public GameObject MummyPrefab;
+        public GameObject FlamePrefab;
+
+        [Header("Enemy counts")]
+        public int slimeCount = 10;
+        public int flameCount = 5;
 
         public static Vector2 CellSize = new Vector2(1, 1);
 
@@ -43,8 +44,11 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
                 SpawnPlayerInRoom(player, rooms[0]);
             }
 
-            EnemyPositionGenerator.SpawnEnemies(SlimePrefab, 5, rooms, CellSize);
-            // EnemyPositionGenerator.SpawnEnemies(MummyPrefab, 5, rooms, CellSize);
+            if (SlimePrefab != null && slimeCount > 0)
+                EnemyPositionGenerator.SpawnEnemies(SlimePrefab, slimeCount, rooms, CellSize);
+
+            if (FlamePrefab != null && flameCount > 0)
+                EnemyPositionGenerator.SpawnEnemies(FlamePrefab, flameCount, rooms, CellSize);
         }
 
         List<Room> GeneratingMap()
@@ -80,7 +84,6 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
             var (centerX, centerY) = spawnRoom.Center();
             playerObject.transform.position = new Vector3(centerX * CellSize.x, -centerY * CellSize.y, 0);
 
-            // Дополнительно пробуем назначить BattleCanvas игроку
             var battleSystem = playerObject.GetComponent<BattleSystem>();
             if (battleSystem != null && battleSystem.battleCanvas == null)
             {
@@ -199,11 +202,6 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
             foreach (var obj in GameObject.FindGameObjectsWithTag("Floor")) Destroy(obj);
             foreach (var obj in GameObject.FindGameObjectsWithTag("Corridor")) Destroy(obj);
             foreach (var obj in GameObject.FindGameObjectsWithTag("Corner")) Destroy(obj);
-        }
-
-        void DestroyEnemy()
-        {
-            foreach (var obj in GameObject.FindGameObjectsWithTag("Enemy")) Destroy(obj);
         }
     }
 }

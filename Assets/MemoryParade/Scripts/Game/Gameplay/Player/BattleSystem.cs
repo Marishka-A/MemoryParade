@@ -1,16 +1,14 @@
-﻿using Assets.MemoryParade.Scripts.Game.Gameplay.Player;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Assets.MemoryParade.Scripts.Game.GameRoot;
+using UnityEngine.EventSystems;
 
 public class BattleSystem : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerHPText;
     [SerializeField] private TextMeshProUGUI enemyHPText;
-
-    public int attackCount = 0;
-    public int powerAttackCount = 0;
+    [SerializeField] private TextMeshProUGUI manaText;
 
     public GameObject battleCanvas;
 
@@ -22,8 +20,6 @@ public class BattleSystem : MonoBehaviour
     private Animator enemyAnimator;
 
     private BattleTrigger battle;
-    private PowerAttack powerAttack;
-    private SuperAttack superAttack;
     private PlayerСharacteristics сharacteristics;
 
     public bool BattleIsEnd = false;
@@ -35,9 +31,18 @@ public class BattleSystem : MonoBehaviour
     {
         playerAnimator = GetComponent<Animator>();
         battle = FindAnyObjectByType<BattleTrigger>();
-        сharacteristics = PlayerСharacteristics.Instance;
 
-        // Ищем BattleCanvas даже если он неактивен
+        сharacteristics = PlayerСharacteristics.Instance;
+        if (сharacteristics == null)
+        {
+            сharacteristics = GetComponent<PlayerСharacteristics>();
+        }
+
+        if (сharacteristics != null)
+            playerHP = сharacteristics.healthPoints;
+        else
+            playerHP = 100;
+
         if (battleCanvas == null)
         {
             Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
@@ -50,16 +55,6 @@ public class BattleSystem : MonoBehaviour
                 }
             }
         }
-
-        if (battleCanvas == null)
-        {
-            Debug.LogError("Не найден BattleCanvas");
-        }
-
-        if (сharacteristics != null)
-            playerHP = сharacteristics.healthPoints;
-        else
-            playerHP = 100;
 
         if (playerHPText == null)
         {
@@ -87,8 +82,18 @@ public class BattleSystem : MonoBehaviour
             }
         }
 
-        powerAttack = FindAnyObjectByType<PowerAttack>();
-        superAttack = FindAnyObjectByType<SuperAttack>();
+        if (manaText == null)
+        {
+            var allTexts = Resources.FindObjectsOfTypeAll<TextMeshProUGUI>();
+            foreach (var text in allTexts)
+            {
+                if (text.name == "ManaText")
+                {
+                    manaText = text;
+                    break;
+                }
+            }
+        }
 
         if (SceneManager.GetActiveScene().name == Scenes.GAMEPLAY && battleCanvas != null)
             battleCanvas.SetActive(false);
@@ -102,16 +107,8 @@ public class BattleSystem : MonoBehaviour
         if (enemyHPText != null)
             enemyHPText.text = enemyHP.ToString();
 
-        if (Input.GetKeyDown(KeyCode.Space) && canAttack && battle != null && battle.BattleIsStart)
-        {
-            PlayerAttack();
-        }
-        else if (playerAnimator != null && powerAttack != null && superAttack != null &&
-                 !powerAttack.click && !superAttack.click && !BattleIsEnd)
-        {
-            if (!playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
-                playerAnimator.SetBool("turn", false);
-        }
+        if (manaText != null && сharacteristics != null)
+            manaText.text = сharacteristics.mana.ToString();
     }
 
     public void SetCurrentEnemyAnimator(BattleTrigger enemy)
@@ -122,80 +119,54 @@ public class BattleSystem : MonoBehaviour
         battle = enemy;
     }
 
-    public void Attack()
+
+    public void PlayerPhysicalAttack()
+    {
+        if (!canAttack || сharacteristics == null) return;
+
+        canAttack = false;
+
+        Attack();
+        playerDamage = сharacteristics.strength;
+
+        Invoke(nameof(EnemyAttack), 1f);
+        EventSystem.current?.SetSelectedGameObject(null);
+    }
+
+
+    public void PlayerMagicAttack()
+    {
+        if (!canAttack || сharacteristics == null) return;
+
+        int manaCost = 5;
+
+        if (!сharacteristics.SpendMana(manaCost))
+        {
+            Debug.Log("Недостаточно маны");
+            return;
+        }
+
+        canAttack = false;
+
+        Attack();
+        playerDamage = сharacteristics.strength + 10;
+
+        Invoke(nameof(EnemyAttack), 1f);
+        EventSystem.current?.SetSelectedGameObject(null);
+    }
+
+    void Attack()
     {
         if (playerAnimator == null) return;
 
         playerAnimator.ResetTrigger("Attack");
-        playerAnimator.SetBool("turn", true);
         playerAnimator.SetTrigger("Attack");
-        playerAnimator.Update(0f);
-    }
-
-    public void PlayerSuperAttack()
-    {
-        canAttack = false;
-        Attack();
-        playerDamage = 50;
-        Invoke(nameof(EnemyAttack), 1f);
-    }
-
-    public void PlayerPowerAttack()
-    {
-        powerAttackCount++;
-        Debug.Log($"Усиленная атака. powerAttackCount = {powerAttackCount}");
-
-        canAttack = false;
-        Attack();
-        playerDamage = сharacteristics.baseAttack * 2;
-        Invoke(nameof(EnemyAttack), 1f);
-    }
-
-    void PlayerAttack()
-    {
-        attackCount++;
-        Debug.Log($"Обычная атака. attackCount = {attackCount}");
-
-        canAttack = false;
-        Attack();
-        playerDamage = сharacteristics.baseAttack;
-        Invoke(nameof(EnemyAttack), 1f);
     }
 
     public void BattleEnd()
     {
-        powerAttackCount = 0;
-        attackCount = 0;
         canAttack = true;
         enemyHP = 100;
-    }
-
-    void EnemyDie()
-    {
-        if (enemyAnimator == null) return;
-
-        enemyAnimator.SetBool("die", true);
-        Invoke(nameof(Treasure), 3f);
-    }
-
-    void PlayerDie()
-    {
-        if (playerAnimator == null) return;
-
-        playerAnimator.SetTrigger("die");
-        playerAnimator.transform.position = new Vector3(
-            playerAnimator.transform.position.x,
-            playerAnimator.transform.position.y - 0.3f,
-            0
-        );
-    }
-
-    void Treasure()
-    {
-        if (enemyAnimator == null) return;
-
-        enemyAnimator.SetTrigger("treasure");
-        enemyAnimator.transform.localScale = new Vector3(1.5f, 1.5f, 0);
     }
 
     public void EnemyAttack()
@@ -206,6 +177,7 @@ public class BattleSystem : MonoBehaviour
         {
             enemyHP = 0;
             Debug.Log("Вы выиграли");
+
             EnemyDie();
             BattleIsEnd = true;
 
@@ -240,5 +212,28 @@ public class BattleSystem : MonoBehaviour
             PlayerDie();
             PlayerLose = true;
         }
+    }
+
+    void EnemyDie()
+    {
+        if (enemyAnimator == null) return;
+
+        enemyAnimator.SetBool("die", true);
+        Invoke(nameof(Treasure), 3f);
+    }
+
+    void PlayerDie()
+    {
+        if (playerAnimator == null) return;
+
+        playerAnimator.SetTrigger("die");
+    }
+
+    void Treasure()
+    {
+        if (enemyAnimator == null) return;
+
+        enemyAnimator.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
+        enemyAnimator.SetTrigger("treasure");
     }
 }

@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.MemoryParade.Scripts.Game.Gameplay.Player.Stats
 {
-    public class BoostPower: MonoBehaviour
+    public class BoostPower : MonoBehaviour
     {
         public void OnClick()
         {
-            if (PlayerСharacteristics.Instance.numberOfWins != 0)
+            if (PlayerСharacteristics.Instance == null) return;
+
+            if (PlayerСharacteristics.Instance.numberOfWins > 0)
             {
-                PlayerСharacteristics.Instance.baseAttack++;
-                PlayerСharacteristics.Instance.Boost();
+                PlayerСharacteristics.Instance.AddStrength(5); // +5 силы
+
+                PlayerСharacteristics.Instance.numberOfWins--;
             }
         }
     }

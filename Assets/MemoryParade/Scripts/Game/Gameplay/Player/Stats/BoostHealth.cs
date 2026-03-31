@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.MemoryParade.Scripts.Game.Gameplay.Player.Stats
 {
@@ -11,10 +6,17 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.Player.Stats
     {
         public void OnClick()
         {
-            if (PlayerСharacteristics.Instance.numberOfWins != 0)
+            if (PlayerСharacteristics.Instance == null) return;
+
+            if (PlayerСharacteristics.Instance.numberOfWins > 0)
             {
                 PlayerСharacteristics.Instance.healthPoints += 20;
-                PlayerСharacteristics.Instance.Boost();
+
+                // ограничение, чтобы не уходило выше 100
+                if (PlayerСharacteristics.Instance.healthPoints > 100)
+                    PlayerСharacteristics.Instance.healthPoints = 100;
+
+                PlayerСharacteristics.Instance.numberOfWins--;
             }
         }
     }

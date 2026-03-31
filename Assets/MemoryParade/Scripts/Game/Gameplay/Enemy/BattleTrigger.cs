@@ -13,6 +13,8 @@ public class BattleTrigger : MonoBehaviour
     private CharacterAttack characterAttack;
     private SpriteRenderer spriteRendererEnemy;
 
+    private GameObject gameplayHUD;
+
     public bool BattleIsStart = false;
     private BattleSystem battleSystem;
 
@@ -27,6 +29,7 @@ public class BattleTrigger : MonoBehaviour
     void Init()
 {
     enemyFollow = GetComponent<Follow>();
+    gameplayHUD = GameObject.Find("GameplayHUD");
 
     if (enemyFollow == null)
     {
@@ -89,8 +92,33 @@ public class BattleTrigger : MonoBehaviour
         if (traesure && Vector2.Distance(playerMove.transform.position, enemyFollow.transform.position) < 0.1f)
         {
             traesure = false;
-            PlayerСharacteristics.Instance.AddScore();
+
+            string enemyName = gameObject.name;
+
+            GameObject[] allEnemies = GameObject.FindGameObjectsWithTag("Enemy");
+            bool isLastEnemyOnMap = allEnemies.Length <= 1;
+
+            bool allSlimesDead = true;
+            foreach (var enemy in allEnemies)
+            {
+                if (enemy != gameObject && enemy.name.ToLower().Contains("slime"))
+                {
+                    allSlimesDead = false;
+                    break;
+                }
+            }
+
+            if (PlayerСharacteristics.Instance != null)
+            {
+                PlayerСharacteristics.Instance.RegisterEnemyShardPickup(enemyName, isLastEnemyOnMap, allSlimesDead);
+            }
+
             Destroy(gameObject);
+
+            if (isLastEnemyOnMap)
+            {
+                SceneTransitionManager.Instance.GoToScene(Scenes.LOBBY);
+            }
         }
 
         if (battleSystem.BattleIsEnd && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle)
@@ -152,6 +180,9 @@ public class BattleTrigger : MonoBehaviour
 
         battleSystem.battleCanvas.SetActive(true);
 
+        if (gameplayHUD != null)
+            gameplayHUD.SetActive(false);
+
         ChangePositionGameObject(player);
         playerMove.enabled = false;
 
@@ -196,6 +227,9 @@ public class BattleTrigger : MonoBehaviour
         UpdateCamera(false);
 
         battleSystem.battleCanvas.SetActive(false);
+
+        if (gameplayHUD != null)
+            gameplayHUD.SetActive(true);
 
         if (characterAttack != null)
             characterAttack.enabled = false;

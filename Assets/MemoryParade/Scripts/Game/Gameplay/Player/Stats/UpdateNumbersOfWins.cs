@@ -25,7 +25,7 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.Player
         {
             if (attackPower != null)
             {
-                attackPower.text = PlayerСharacteristics.Instance.baseAttack.ToString();
+                attackPower.text = PlayerСharacteristics.Instance.strength.ToString();
             }
             if (health != null)
             {
