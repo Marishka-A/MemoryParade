@@ -25,7 +25,13 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
         public int slimeCount = 10;
         public int flameCount = 5;
 
+        [Header("Mana orbs")]
+        public GameObject manaOrbPrefab;
+        public int manaOrbCount = 5;
+
         public static Vector2 CellSize = new Vector2(1, 1);
+
+        private List<Room> generatedRooms;
 
         void Start()
         {
@@ -37,18 +43,78 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
             MapRenderer.WallAnglePrefab = wallAnglePrefab;
             MapRenderer.EmptyWallPrefab = emptyWallPrefab;
 
-            List<Room> rooms = GeneratingMap();
+            generatedRooms = GeneratingMap();
 
-            if (rooms != null && rooms.Count > 0)
+            if (generatedRooms != null && generatedRooms.Count > 0)
             {
-                SpawnPlayerInRoom(player, rooms[0]);
+                SpawnPlayerInRoom(player, generatedRooms[0]);
             }
 
-            if (SlimePrefab != null && slimeCount > 0)
-                EnemyPositionGenerator.SpawnEnemies(SlimePrefab, slimeCount, rooms, CellSize);
+            SpawnEnemiesAndMana();
+        }
 
-            if (FlamePrefab != null && flameCount > 0)
-                EnemyPositionGenerator.SpawnEnemies(FlamePrefab, flameCount, rooms, CellSize);
+        private void SpawnEnemiesAndMana()
+        {
+            if (generatedRooms == null || generatedRooms.Count == 0)
+            {
+                Debug.LogError("Комнаты не сгенерированы, нечего спавнить");
+                return;
+            }
+
+            SpawnObjectsInRooms(SlimePrefab, slimeCount, "Slime");
+            SpawnObjectsInRooms(FlamePrefab, flameCount, "Flame");
+            SpawnObjectsInRooms(manaOrbPrefab, manaOrbCount, "Mana Orb");
+        }
+
+        private void SpawnObjectsInRooms(GameObject prefab, int count, string debugName)
+        {
+            if (prefab == null)
+            {
+                Debug.LogWarning($"{debugName} prefab не назначен");
+                return;
+            }
+
+            if (count <= 0)
+            {
+                Debug.LogWarning($"{debugName} count <= 0");
+                return;
+            }
+
+            int spawned = 0;
+            int attempts = 0;
+            int maxAttempts = count * 20;
+
+            while (spawned < count && attempts < maxAttempts)
+            {
+                attempts++;
+
+                Room room = generatedRooms[Random.Range(0, generatedRooms.Count)];
+                var (centerX, centerY) = room.Center();
+
+                // небольшой случайный сдвиг от центра комнаты
+                int offsetX = Random.Range(-2, 3);
+                int offsetY = Random.Range(-2, 3);
+
+                Vector3 spawnPos = new Vector3(
+                    (centerX + offsetX) * CellSize.x,
+                    -(centerY + offsetY) * CellSize.y,
+                    0f
+                );
+
+                Collider2D hit = Physics2D.OverlapCircle(spawnPos, 0.6f);
+                if (hit != null)
+                    continue;
+
+                GameObject obj = Instantiate(prefab, spawnPos, Quaternion.identity);
+                Debug.Log($"{debugName} spawned: {obj.name} at {spawnPos}");
+
+                spawned++;
+            }
+
+            if (spawned < count)
+            {
+                Debug.LogWarning($"Не удалось заспавнить все объекты {debugName}. Создано: {spawned} из {count}");
+            }
         }
 
         List<Room> GeneratingMap()

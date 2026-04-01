@@ -68318,6 +68318,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 891313437}
+  - component: {fileID: 891313438}
   - component: {fileID: 891313436}
   - component: {fileID: 891313435}
   - component: {fileID: 891313434}
@@ -68418,6 +68419,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &891313438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891313433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b5e6a22d54d4e445b9926ca80607de7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hpText: {fileID: 773222756}
+  manaText: {fileID: 1647133066}
+  strengthText: {fileID: 1856513859}
+  shardsText: {fileID: 0}
 --- !u!1 &896818396
 GameObject:
   m_ObjectHideFlags: 0
@@ -69573,7 +69590,11 @@ MonoBehaviour:
   emptyWallPrefab: {fileID: 2455634510900548839, guid: 1cb940ee70a5c614bbd943f69ff270c6, type: 3}
   player: {fileID: 2696466627519709985}
   SlimePrefab: {fileID: 1709534823573126454, guid: a9913d2586039f64cbebf423b9cbbaef, type: 3}
-  MummyPrefab: {fileID: 1402060186751624844, guid: b65c5a4cb2e972c4eb946f6a5948d0df, type: 3}
+  FlamePrefab: {fileID: 1709534823573126454, guid: da7639af467f82d4fb3b41bb1fde4f4f, type: 3}
+  slimeCount: 10
+  flameCount: 3
+  manaOrbPrefab: {fileID: 1201214356687913750, guid: 06a4a581b363b38469076508e88fc26a, type: 3}
+  manaOrbCount: 5
 --- !u!4 &1865237698
 Transform:
   m_ObjectHideFlags: 0
@@ -70359,10 +70380,9 @@ MonoBehaviour:
   strength: 10
   mana: 30
   maxMana: 30
-  kills: 0
-  slimeFirstBonusGiven: 0
-  slimeClearBonusGiven: 0
-  baseAttack: 2
+  slimeKills: 0
+  firstSlimeBonusGiven: 0
+  allSlimesBonusGiven: 0
   numberOfWins: 0
 --- !u!1 &8380895870444263901
 GameObject:

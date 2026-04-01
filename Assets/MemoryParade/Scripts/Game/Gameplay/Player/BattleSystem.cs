@@ -1,8 +1,8 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Assets.MemoryParade.Scripts.Game.GameRoot;
 using UnityEngine.EventSystems;
+using Assets.MemoryParade.Scripts.Game.GameRoot;
 
 public class BattleSystem : MonoBehaviour
 {
@@ -34,9 +34,7 @@ public class BattleSystem : MonoBehaviour
 
         сharacteristics = PlayerСharacteristics.Instance;
         if (сharacteristics == null)
-        {
             сharacteristics = GetComponent<PlayerСharacteristics>();
-        }
 
         if (сharacteristics != null)
             playerHP = сharacteristics.healthPoints;
@@ -119,20 +117,18 @@ public class BattleSystem : MonoBehaviour
         battle = enemy;
     }
 
-
     public void PlayerPhysicalAttack()
     {
         if (!canAttack || сharacteristics == null) return;
 
         canAttack = false;
-
         Attack();
+
         playerDamage = сharacteristics.strength;
 
         Invoke(nameof(EnemyAttack), 1f);
         EventSystem.current?.SetSelectedGameObject(null);
     }
-
 
     public void PlayerMagicAttack()
     {
@@ -147,9 +143,9 @@ public class BattleSystem : MonoBehaviour
         }
 
         canAttack = false;
-
         Attack();
-        playerDamage = сharacteristics.strength + 10;
+
+        playerDamage = сharacteristics.strength * 2;
 
         Invoke(nameof(EnemyAttack), 1f);
         EventSystem.current?.SetSelectedGameObject(null);
@@ -176,8 +172,6 @@ public class BattleSystem : MonoBehaviour
         if (enemyHP <= 0)
         {
             enemyHP = 0;
-            Debug.Log("Вы выиграли");
-
             EnemyDie();
             BattleIsEnd = true;
 
@@ -208,7 +202,6 @@ public class BattleSystem : MonoBehaviour
         if (playerHP <= 0)
         {
             playerHP = 0;
-            Debug.Log("Вы проиграли");
             PlayerDie();
             PlayerLose = true;
         }
@@ -233,7 +226,6 @@ public class BattleSystem : MonoBehaviour
     {
         if (enemyAnimator == null) return;
 
-        enemyAnimator.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
         enemyAnimator.SetTrigger("treasure");
     }
 }

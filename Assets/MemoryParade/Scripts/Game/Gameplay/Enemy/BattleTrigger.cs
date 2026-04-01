@@ -23,6 +23,8 @@ public class BattleTrigger : MonoBehaviour
 
     private bool init = false;
     private bool traesure = false;
+    private bool enemyDeathSequenceStarted = false;
+    private bool playerLoseSequenceStarted = false;
 
     [SerializeField] private float battleStartDistance = 0.8f;
 
@@ -121,13 +123,15 @@ public class BattleTrigger : MonoBehaviour
             }
         }
 
-        if (battleSystem.BattleIsEnd && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle)
+        if (battleSystem.BattleIsEnd && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle && !enemyDeathSequenceStarted)
         {
+            enemyDeathSequenceStarted = true;
             StartCoroutine(WaiterEnemyDie());
         }
 
-        if (battleSystem.PlayerLose && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle)
+        if (battleSystem.PlayerLose && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle && !playerLoseSequenceStarted)
         {
+            playerLoseSequenceStarted = true;
             StartCoroutine(WaiterPlayerDie());
         }
     }
@@ -150,9 +154,20 @@ public class BattleTrigger : MonoBehaviour
         pos.z = 0;
 
         if (obj.CompareTag("Player"))
+        {
             obj.transform.position = pos + shiftPositionPlayer;
+        }
         else if (obj.CompareTag("Enemy"))
+        {
             obj.transform.position = pos + shiftPositionEnemy;
+
+            if (obj.name.ToLower().Contains("flame"))
+            {
+                Vector3 scale = obj.transform.localScale;
+                scale.x = -Mathf.Abs(scale.x);
+                obj.transform.localScale = scale;
+            }
+        }
     }
 
     void StartBattle()
@@ -199,6 +214,8 @@ public class BattleTrigger : MonoBehaviour
             spriteRendererEnemy.sortingOrder = 5;
 
         BattleIsStart = true;
+        enemyDeathSequenceStarted = false;
+        playerLoseSequenceStarted = false;
     }
 
     void EndBattle()
@@ -248,6 +265,17 @@ public class BattleTrigger : MonoBehaviour
         battleSystem.BattleIsEnd = false;
         BattleIsStart = false;
         init = false;
+
+        var enemySr = gameObject.GetComponent<SpriteRenderer>();
+        if (gameObject.name.ToLower().Contains("flame"))
+        {
+            Vector3 scale = gameObject.transform.localScale;
+            scale.x = Mathf.Abs(scale.x);
+            gameObject.transform.localScale = scale;
+        }
+
+        enemyDeathSequenceStarted = false;
+        playerLoseSequenceStarted = false;
     }
 
     private void UpdateCamera(bool zoom)
