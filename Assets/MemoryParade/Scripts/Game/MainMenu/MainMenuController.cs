@@ -1,13 +1,18 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using Assets.MemoryParade.Scripts.Game.GameRoot;
 
 public class MainMenuController : MonoBehaviour
 {
-    [SerializeField] private string gameplaySceneName = "Gameplay";
-
     public void PlayGame()
     {
-        SceneManager.LoadScene("Gameplay");
+        if (SceneTransitionManager.Instance != null)
+        {
+            SceneTransitionManager.Instance.GoToScene(Scenes.DIALOGUE_INTRO);
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(Scenes.DIALOGUE_INTRO);
+        }
     }
 
     public void ExitGame()

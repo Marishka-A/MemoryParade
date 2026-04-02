@@ -7,5 +7,6 @@ namespace Assets.MemoryParade.Scripts.Game.GameRoot{
         public const string GAMEPLAY = "Gameplay";
         public const string MAIN_MENU = "MainMenu";
         public const string LOBBY = "Lobby";
+        public const string DIALOGUE_INTRO = "DialogueIntro";
     }
 }
