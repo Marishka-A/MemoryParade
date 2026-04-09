@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,15 +19,27 @@ public class DialogueIntroController : MonoBehaviour
     public class DialogueLine
     {
         public Speaker speaker;
-        [TextArea(2, 6)] public string text;
+        public string speakerName;
+
+        [TextArea(2, 6)]
+        public string text;
 
         public Sprite background;
         public Sprite leftPortrait;
         public Sprite rightPortrait;
 
-        public string speakerName;
         public bool leftActive;
         public bool rightActive;
+
+        [Header("Effects")]
+        public bool useFade;
+        public float fadeDuration = 0.35f;
+
+        public bool shakeCamera;
+        public float shakeDuration = 0.2f;
+        public float shakeStrength = 8f;
+
+        public float delayBeforeShow = 0f;
     }
 
     [Header("UI")]
@@ -37,6 +50,8 @@ public class DialogueIntroController : MonoBehaviour
     [SerializeField] private TMP_Text dialogueText;
     [SerializeField] private GameObject dialoguePanel;
     [SerializeField] private Button nextButton;
+    [SerializeField] private Image fadeOverlay;
+    [SerializeField] private RectTransform contentRoot;
 
     [Header("Visual")]
     [SerializeField] private Color activeColor = Color.white;
@@ -46,41 +61,87 @@ public class DialogueIntroController : MonoBehaviour
     [SerializeField] private List<DialogueLine> lines = new List<DialogueLine>();
 
     private int _currentIndex = 0;
+    private bool _isBusy = false;
 
     private void Start()
     {
         if (nextButton != null)
-            nextButton.onClick.AddListener(NextLine);
+            nextButton.onClick.AddListener(OnNextPressed);
+
+        if (fadeOverlay != null)
+        {
+            var c = fadeOverlay.color;
+            c.a = 1f;
+            fadeOverlay.color = c;
+        }
+
+        if (dialoguePanel != null)
+            dialoguePanel.SetActive(true);
 
         if (lines.Count > 0)
-            ShowLine(0);
+        {
+            _currentIndex = 0;
+            ApplyLine(lines[0]);
+        }
+
+        StartCoroutine(BeginDialogue());
+    }
+
+    private IEnumerator BeginDialogue()
+    {
+        _isBusy = true;
+        yield return new WaitForSeconds(0.1f);
+        yield return StartCoroutine(FadeFromBlack(1.0f));
+        _isBusy = false;
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+        if (_isBusy) return;
+
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            NextLine();
+            OnNextPressed();
         }
     }
 
-    public void NextLine()
+    private void OnNextPressed()
     {
+        if (_isBusy) return;
+
         _currentIndex++;
 
         if (_currentIndex >= lines.Count)
         {
-            FinishDialogue();
+            StartCoroutine(FinishDialogueRoutine());
             return;
         }
 
-        ShowLine(_currentIndex);
+        StartCoroutine(ShowLineRoutine(_currentIndex));
     }
 
-    private void ShowLine(int index)
+    private IEnumerator ShowLineRoutine(int index)
     {
-        var line = lines[index];
+        _isBusy = true;
 
+        DialogueLine line = lines[index];
+
+        if (line.delayBeforeShow > 0f)
+            yield return new WaitForSeconds(line.delayBeforeShow);
+
+        if (line.useFade)
+            yield return StartCoroutine(FadeToBlackAndBack(line.fadeDuration, () => ApplyLine(line)));
+        else
+            ApplyLine(line);
+
+        if (line.shakeCamera)
+            yield return StartCoroutine(ShakeUI(line.shakeDuration, line.shakeStrength));
+
+        _isBusy = false;
+    }
+
+    private void ApplyLine(DialogueLine line)
+    {
         if (dialoguePanel != null)
             dialoguePanel.SetActive(true);
 
@@ -108,11 +169,76 @@ public class DialogueIntroController : MonoBehaviour
             dialogueText.text = line.text;
     }
 
-    private void FinishDialogue()
+    private IEnumerator FinishDialogueRoutine()
     {
+        _isBusy = true;
+        yield return StartCoroutine(FadeToBlack(0.6f));
+
         if (SceneTransitionManager.Instance != null)
             SceneTransitionManager.Instance.GoToScene(Scenes.LOBBY);
         else
             UnityEngine.SceneManagement.SceneManager.LoadScene(Scenes.LOBBY);
+    }
+
+    private IEnumerator FadeToBlackAndBack(float duration, System.Action midAction)
+    {
+        yield return StartCoroutine(Fade(0f, 1f, duration * 0.5f));
+
+        midAction?.Invoke();
+
+        yield return StartCoroutine(Fade(1f, 0f, duration * 0.5f));
+    }
+
+    private IEnumerator FadeToBlack(float duration)
+    {
+        yield return StartCoroutine(Fade(0f, 1f, duration));
+    }
+
+    private IEnumerator FadeFromBlack(float duration)
+    {
+        yield return StartCoroutine(Fade(1f, 0f, duration));
+    }
+
+    private IEnumerator Fade(float from, float to, float duration)
+    {
+        if (fadeOverlay == null)
+            yield break;
+
+        float time = 0f;
+        Color color = fadeOverlay.color;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = Mathf.Clamp01(time / duration);
+            color.a = Mathf.Lerp(from, to, t);
+            fadeOverlay.color = color;
+            yield return null;
+        }
+
+        color.a = to;
+        fadeOverlay.color = color;
+    }
+
+    private IEnumerator ShakeUI(float duration, float strength)
+    {
+        if (contentRoot == null)
+            yield break;
+
+        Vector2 originalPos = contentRoot.anchoredPosition;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            float offsetX = Random.Range(-strength, strength);
+            float offsetY = Random.Range(-strength, strength);
+
+            contentRoot.anchoredPosition = originalPos + new Vector2(offsetX, offsetY);
+            yield return null;
+        }
+
+        contentRoot.anchoredPosition = originalPos;
     }
 }
