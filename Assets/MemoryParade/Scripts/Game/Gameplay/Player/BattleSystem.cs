@@ -10,6 +10,8 @@ public class BattleSystem : MonoBehaviour
     [SerializeField] private TextMeshProUGUI enemyHPText;
     [SerializeField] private TextMeshProUGUI manaText;
 
+    [SerializeField] private int shardsForWin = 1; // сколько осколков давать за победу
+
     public GameObject battleCanvas;
 
     private int playerHP;
@@ -209,10 +211,11 @@ public class BattleSystem : MonoBehaviour
 
     void EnemyDie()
     {
-        if (enemyAnimator == null) return;
+        // Сразу начисляем осколки за победу
+        ShardProgress.AddPlayerShards(shardsForWin);
 
-        enemyAnimator.SetBool("die", true);
-        Invoke(nameof(Treasure), 3f);
+        if (enemyAnimator != null)
+            enemyAnimator.SetBool("die", true);
     }
 
     void PlayerDie()
@@ -220,12 +223,5 @@ public class BattleSystem : MonoBehaviour
         if (playerAnimator == null) return;
 
         playerAnimator.SetTrigger("die");
-    }
-
-    void Treasure()
-    {
-        if (enemyAnimator == null) return;
-
-        enemyAnimator.SetTrigger("treasure");
     }
 }

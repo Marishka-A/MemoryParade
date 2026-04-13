@@ -22,53 +22,51 @@ public class BattleTrigger : MonoBehaviour
     private Camera main;
 
     private bool init = false;
-    private bool traesure = false;
     private bool enemyDeathSequenceStarted = false;
     private bool playerLoseSequenceStarted = false;
 
     [SerializeField] private float battleStartDistance = 0.8f;
 
     void Init()
-{
-    enemyFollow = GetComponent<Follow>();
-    gameplayHUD = GameObject.Find("GameplayHUD");
-
-    if (enemyFollow == null)
     {
-        Debug.LogWarning("Не найден скрипт Follow");
-        return;
+        enemyFollow = GetComponent<Follow>();
+        gameplayHUD = GameObject.Find("GameplayHUD");
+
+        if (enemyFollow == null)
+        {
+            Debug.LogWarning("Не найден скрипт Follow");
+            return;
+        }
+
+        player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null)
+        {
+            Debug.LogWarning("Player не найден");
+            return;
+        }
+
+        playerMove = player.GetComponent<CharacterMove>();
+        if (playerMove == null)
+        {
+            Debug.LogWarning("Не найден CharacterMove у Player");
+            return;
+        }
+
+        characterAttack = FindObjectOfType<CharacterAttack>();
+        cinemachineVirtualCamera = FindAnyObjectByType<CinemachineVirtualCamera>();
+
+        battleSystem = player.GetComponent<BattleSystem>();
+        if (battleSystem == null)
+        {
+            Debug.LogWarning("Не найден BattleSystem у Player");
+            return;
+        }
+
+        spriteRendererEnemy = gameObject.GetComponent<SpriteRenderer>();
+        main = FindObjectOfType<Camera>();
+
+        init = true;
     }
-
-    player = GameObject.FindGameObjectWithTag("Player");
-    if (player == null)
-    {
-        Debug.LogWarning("Player не найден");
-        return;
-    }
-
-    playerMove = player.GetComponent<CharacterMove>();
-    if (playerMove == null)
-    {
-        Debug.LogWarning("Не найден CharacterMove у Player");
-        return;
-    }
-
-    characterAttack = FindObjectOfType<CharacterAttack>();
-    cinemachineVirtualCamera = FindAnyObjectByType<CinemachineVirtualCamera>();
-
-    battleSystem = player.GetComponent<BattleSystem>();
-    if (battleSystem == null)
-    {
-        Debug.LogWarning("Не найден BattleSystem у Player");
-        return;
-    }
-
-    spriteRendererEnemy = gameObject.GetComponent<SpriteRenderer>();
-    main = FindObjectOfType<Camera>();
-
-    init = true;
-}
-
 
     void Update()
     {
@@ -85,42 +83,10 @@ public class BattleTrigger : MonoBehaviour
         if (!battleSystem.BattleIsEnd &&
             enemyFollow.canBattle &&
             !battleSystem.battleCanvas.activeSelf &&
-            distanceToPlayer < 0.8f)
+            distanceToPlayer < battleStartDistance)
         {
             battleSystem.SetCurrentEnemyAnimator(this);
             StartBattle();
-        }
-
-        if (traesure && Vector2.Distance(playerMove.transform.position, enemyFollow.transform.position) < 0.1f)
-        {
-            traesure = false;
-
-            string enemyName = gameObject.name;
-
-            GameObject[] allEnemies = GameObject.FindGameObjectsWithTag("Enemy");
-            bool isLastEnemyOnMap = allEnemies.Length <= 1;
-
-            bool allSlimesDead = true;
-            foreach (var enemy in allEnemies)
-            {
-                if (enemy != gameObject && enemy.name.ToLower().Contains("slime"))
-                {
-                    allSlimesDead = false;
-                    break;
-                }
-            }
-
-            if (PlayerСharacteristics.Instance != null)
-            {
-                PlayerСharacteristics.Instance.RegisterEnemyShardPickup(enemyName, isLastEnemyOnMap, allSlimesDead);
-            }
-
-            Destroy(gameObject);
-
-            if (isLastEnemyOnMap)
-            {
-                SceneTransitionManager.Instance.GoToScene(Scenes.LOBBY);
-            }
         }
 
         if (battleSystem.BattleIsEnd && battleSystem.battleCanvas.activeSelf && enemyFollow.canBattle && !enemyDeathSequenceStarted)
@@ -235,8 +201,6 @@ public class BattleTrigger : MonoBehaviour
         if (battleSystem == null || battleSystem.battleCanvas == null || player == null)
             return;
 
-        traesure = true;
-
         Vector3 pos = battleSystem.battleCanvas.transform.position;
         pos.z = 0;
         player.transform.position = pos;
@@ -251,7 +215,6 @@ public class BattleTrigger : MonoBehaviour
         if (characterAttack != null)
             characterAttack.enabled = false;
 
-        // ВАЖНО — вернуть Animator
         var anim = player.GetComponent<Animator>();
         if (anim != null)
         {
@@ -266,7 +229,6 @@ public class BattleTrigger : MonoBehaviour
         BattleIsStart = false;
         init = false;
 
-        var enemySr = gameObject.GetComponent<SpriteRenderer>();
         if (gameObject.name.ToLower().Contains("flame"))
         {
             Vector3 scale = gameObject.transform.localScale;
@@ -311,8 +273,37 @@ public class BattleTrigger : MonoBehaviour
     IEnumerator WaiterEnemyDie()
     {
         enemyFollow.canBattle = false;
+
         yield return new WaitForSeconds(3f);
+
+        string enemyName = gameObject.name;
+
+        GameObject[] allEnemies = GameObject.FindGameObjectsWithTag("Enemy");
+        bool isLastEnemyOnMap = allEnemies.Length <= 1;
+
+        bool allSlimesDead = true;
+        foreach (var enemy in allEnemies)
+        {
+            if (enemy != gameObject && enemy.name.ToLower().Contains("slime"))
+            {
+                allSlimesDead = false;
+                break;
+            }
+        }
+
+        if (PlayerСharacteristics.Instance != null)
+        {
+            PlayerСharacteristics.Instance.RegisterEnemyShardPickup(enemyName, isLastEnemyOnMap, allSlimesDead);
+        }
+
         EndBattle();
+
+        Destroy(gameObject);
+
+        if (isLastEnemyOnMap)
+        {
+            SceneTransitionManager.Instance.GoToScene(Scenes.LOBBY);
+        }
     }
 
     IEnumerator WaiterPlayerDie()

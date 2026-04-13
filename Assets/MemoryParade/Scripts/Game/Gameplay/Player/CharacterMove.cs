@@ -44,7 +44,7 @@ public class CharacterMove : MonoBehaviour
             _animator.SetFloat("X", move.x);
             _animator.SetFloat("Y", move.y);
 
-            transform.Translate(move * 0.02f); // ��������
+            transform.Translate(move * 0.04f); // ��������
         }
         else
         {

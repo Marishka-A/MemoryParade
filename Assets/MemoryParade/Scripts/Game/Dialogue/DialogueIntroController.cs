@@ -32,6 +32,11 @@ public class DialogueIntroController : MonoBehaviour
         ShowDoor,
         HideDoor,
 
+        ShowTopMana,
+        HideTopMana,
+        ShowTopSword,
+        HideTopSword,
+
         EyeGodMoveToBarrier,
         EyeGodLeaveRight,
         EyeGodMoveToHero,
@@ -85,9 +90,9 @@ public class DialogueIntroController : MonoBehaviour
     [SerializeField] private TMP_Text speakerNameText;
     [SerializeField] private TMP_Text dialogueText;
     [SerializeField] private GameObject dialoguePanel;
-    [SerializeField] private Button nextButton;
     [SerializeField] private Image fadeOverlay;
     [SerializeField] private RectTransform contentRoot;
+    [SerializeField] private Button skipButton;
 
     [Header("Typing")]
     [SerializeField] private float typingSpeed = 0.02f;
@@ -105,6 +110,8 @@ public class DialogueIntroController : MonoBehaviour
     [SerializeField] private RectTransform topHero;
     [SerializeField] private RectTransform topBarrier;
     [SerializeField] private RectTransform topDoor;
+    [SerializeField] private RectTransform topMana;
+    [SerializeField] private RectTransform topSword;
 
     [Header("Top Scene Targets")]
     [SerializeField] private RectTransform eyeGodBarrierTarget;
@@ -123,8 +130,8 @@ public class DialogueIntroController : MonoBehaviour
 
     private void Start()
     {
-        if (nextButton != null)
-            nextButton.onClick.AddListener(OnNextPressed);
+        if (skipButton != null)
+            skipButton.onClick.AddListener(OnSkipPressed);
 
         if (fadeOverlay != null)
         {
@@ -142,6 +149,36 @@ public class DialogueIntroController : MonoBehaviour
         StartCoroutine(BeginDialogue());
     }
 
+    private void OnSkipPressed()
+    {
+        if (_isExiting)
+            return;
+
+        StartCoroutine(SkipDialogueRoutine());
+    }
+
+    private IEnumerator SkipDialogueRoutine()
+    {
+        if (_isExiting)
+            yield break;
+
+        _isExiting = true;
+        _isBusy = true;
+
+        if (_typingCoroutine != null)
+        {
+            StopCoroutine(_typingCoroutine);
+            _typingCoroutine = null;
+        }
+
+        yield return StartCoroutine(FadeToBlack(0.4f));
+
+        if (SceneTransitionManager.Instance != null)
+            SceneTransitionManager.Instance.GoToScene(Scenes.GAMEPLAY);
+        else
+            UnityEngine.SceneManagement.SceneManager.LoadScene(Scenes.GAMEPLAY);
+    }
+
     private void InitializeTopSceneObjects()
     {
         SetTopObjectActive(topTreeGod, true);
@@ -150,6 +187,9 @@ public class DialogueIntroController : MonoBehaviour
         SetTopObjectActive(topHero, false);
         SetTopObjectActive(topBarrier, false);
         SetTopObjectActive(topDoor, false);
+
+        SetTopObjectActive(topMana, false);
+        SetTopObjectActive(topSword, false);
     }
 
     private void Update()
@@ -276,10 +316,23 @@ public class DialogueIntroController : MonoBehaviour
     private IEnumerator TypeText(string text)
     {
         _isTyping = true;
+
+        if (dialogueText == null)
+        {
+            _isTyping = false;
+            yield break;
+        }
+
         dialogueText.text = "";
 
         foreach (char c in text)
         {
+            if (_isExiting || dialogueText == null)
+            {
+                _isTyping = false;
+                yield break;
+            }
+
             dialogueText.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }
@@ -378,15 +431,31 @@ public class DialogueIntroController : MonoBehaviour
             case DialogueActionType.Wait:
                 yield return new WaitForSeconds(action.actionDuration);
                 yield break;
-        }
+
+            case DialogueActionType.ShowTopMana:
+                SetTopObjectActive(topMana, true);
+                yield break;
+
+            case DialogueActionType.HideTopMana:
+                SetTopObjectActive(topMana, false);
+                yield break;
+
+            case DialogueActionType.ShowTopSword:
+                SetTopObjectActive(topSword, true);
+                yield break;
+
+            case DialogueActionType.HideTopSword:
+                SetTopObjectActive(topSword, false);
+                yield break;
+                    }
     }
 
     private IEnumerator MoveRect(RectTransform rect, Vector2 targetAnchoredPos)
     {
-        if (rect == null)
+        if (_isExiting || rect == null)
             yield break;
 
-        while (Vector2.Distance(rect.anchoredPosition, targetAnchoredPos) > 2f)
+        while (!_isExiting && rect != null && Vector2.Distance(rect.anchoredPosition, targetAnchoredPos) > 2f)
         {
             rect.anchoredPosition = Vector2.MoveTowards(
                 rect.anchoredPosition,
@@ -397,7 +466,8 @@ public class DialogueIntroController : MonoBehaviour
             yield return null;
         }
 
-        rect.anchoredPosition = targetAnchoredPos;
+        if (!_isExiting && rect != null)
+            rect.anchoredPosition = targetAnchoredPos;
     }
 
     private void SetTopObjectActive(RectTransform rect, bool state)
@@ -406,15 +476,28 @@ public class DialogueIntroController : MonoBehaviour
             rect.gameObject.SetActive(state);
     }
 
+    private bool _isExiting = false;
+
     private IEnumerator FinishDialogueRoutine()
     {
+        if (_isExiting)
+            yield break;
+
+        _isExiting = true;
         _isBusy = true;
+
+        if (_typingCoroutine != null)
+        {
+            StopCoroutine(_typingCoroutine);
+            _typingCoroutine = null;
+        }
+
         yield return StartCoroutine(FadeToBlack(0.6f));
 
         if (SceneTransitionManager.Instance != null)
-            SceneTransitionManager.Instance.GoToScene(Scenes.LOBBY);
+            SceneTransitionManager.Instance.GoToScene(Scenes.GAMEPLAY);
         else
-            UnityEngine.SceneManagement.SceneManager.LoadScene(Scenes.LOBBY);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(Scenes.GAMEPLAY);
     }
 
     private IEnumerator FadeToBlackAndBack(float duration, Action midAction)
@@ -438,13 +521,13 @@ public class DialogueIntroController : MonoBehaviour
 
     private IEnumerator Fade(float from, float to, float duration)
     {
-        if (fadeOverlay == null)
+        if (_isExiting || fadeOverlay == null)
             yield break;
 
         float time = 0f;
         Color color = fadeOverlay.color;
 
-        while (time < duration)
+        while (!_isExiting && fadeOverlay != null && time < duration)
         {
             time += Time.deltaTime;
             float t = Mathf.Clamp01(time / duration);
@@ -453,19 +536,22 @@ public class DialogueIntroController : MonoBehaviour
             yield return null;
         }
 
-        color.a = to;
-        fadeOverlay.color = color;
+        if (!_isExiting && fadeOverlay != null)
+        {
+            color.a = to;
+            fadeOverlay.color = color;
+        }
     }
 
     private IEnumerator ShakeUI(float duration, float strength)
     {
-        if (contentRoot == null)
+        if (_isExiting || contentRoot == null)
             yield break;
 
         Vector2 originalPos = contentRoot.anchoredPosition;
         float time = 0f;
 
-        while (time < duration)
+        while (!_isExiting && contentRoot != null && time < duration)
         {
             time += Time.deltaTime;
 
@@ -476,6 +562,7 @@ public class DialogueIntroController : MonoBehaviour
             yield return null;
         }
 
-        contentRoot.anchoredPosition = originalPos;
+        if (!_isExiting && contentRoot != null)
+            contentRoot.anchoredPosition = originalPos;
     }
 }

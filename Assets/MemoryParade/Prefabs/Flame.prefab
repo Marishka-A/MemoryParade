@@ -195,7 +195,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0
-  sr: {fileID: 0}
+  sr: {fileID: 6187325585163221538, guid: c760696df84e5f34a979d62c82d527db, type: 3}
   canBattle: 0
   raycastDistance: 0.5
   allAwake: 0

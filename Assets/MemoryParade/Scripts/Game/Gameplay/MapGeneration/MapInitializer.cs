@@ -35,6 +35,8 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
 
         void Start()
         {
+            ResetPreviousMapState();
+
             MapRenderer.WallPrefab = wallPrefab;
             MapRenderer.HorizontalCorridorPrefab = horizontalCorridorPrefab;
             MapRenderer.VerticalCorridorPrefab = verticalCorridorPrefab;
@@ -47,10 +49,40 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
 
             if (generatedRooms != null && generatedRooms.Count > 0)
             {
-                SpawnPlayerInRoom(player, generatedRooms[0]);
+                GameObject realPlayer = GameObject.FindWithTag("Player");
+
+                if (realPlayer != null)
+                {
+                    SpawnPlayerInRoom(realPlayer, generatedRooms[0]);
+                }
+                else
+                {
+                    Debug.LogError("Игрок с тегом Player не найден");
+                }
             }
 
             SpawnEnemiesAndMana();
+        }
+
+        private void ResetPreviousMapState()
+        {
+            if (MapRenderer.MapParent != null)
+            {
+                if (MapRenderer.MapParent.gameObject != null)
+                {
+                    Destroy(MapRenderer.MapParent.gameObject);
+                }
+
+                MapRenderer.MapParent = null;
+            }
+
+            GameObject oldRoot = GameObject.Find("MapRoot");
+            if (oldRoot != null)
+            {
+                Destroy(oldRoot);
+            }
+
+            generatedRooms = null;
         }
 
         private void SpawnEnemiesAndMana()
@@ -91,7 +123,6 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
                 Room room = generatedRooms[Random.Range(0, generatedRooms.Count)];
                 var (centerX, centerY) = room.Center();
 
-                // небольшой случайный сдвиг от центра комнаты
                 int offsetX = Random.Range(-2, 3);
                 int offsetY = Random.Range(-2, 3);
 
@@ -148,7 +179,16 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
             }
 
             var (centerX, centerY) = spawnRoom.Center();
-            playerObject.transform.position = new Vector3(centerX * CellSize.x, -centerY * CellSize.y, 0);
+            Vector3 spawnPosition = new Vector3(centerX * CellSize.x, -centerY * CellSize.y, 0f);
+
+            playerObject.transform.position = spawnPosition;
+
+            Rigidbody2D rb = playerObject.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.velocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+            }
 
             var battleSystem = playerObject.GetComponent<BattleSystem>();
             if (battleSystem != null && battleSystem.battleCanvas == null)
@@ -264,10 +304,21 @@ namespace Assets.MemoryParade.Scripts.Game.Gameplay.MapGeneration
 
         void DestroyMap()
         {
-            foreach (var obj in GameObject.FindGameObjectsWithTag("Wall")) Destroy(obj);
-            foreach (var obj in GameObject.FindGameObjectsWithTag("Floor")) Destroy(obj);
-            foreach (var obj in GameObject.FindGameObjectsWithTag("Corridor")) Destroy(obj);
-            foreach (var obj in GameObject.FindGameObjectsWithTag("Corner")) Destroy(obj);
+            if (MapRenderer.MapParent != null)
+            {
+                if (MapRenderer.MapParent.gameObject != null)
+                {
+                    Destroy(MapRenderer.MapParent.gameObject);
+                }
+
+                MapRenderer.MapParent = null;
+            }
+
+            GameObject oldRoot = GameObject.Find("MapRoot");
+            if (oldRoot != null)
+            {
+                Destroy(oldRoot);
+            }
         }
     }
 }

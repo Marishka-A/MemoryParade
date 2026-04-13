@@ -1,44 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 
 namespace Assets.MemoryParade.Scripts.Game.Gameplay.Player
 {
-    public class UpdateNumbersOfWins: MonoBehaviour
+    public class UpdateNumbersOfWins : MonoBehaviour
     {
         private TextMeshProUGUI winsText;
         private TextMeshProUGUI health;
         private TextMeshProUGUI attackPower;
+
         private void Awake()
         {
-            // Получаем компонент TextMeshProUGUI, прикрепленный к объекту
             winsText = GetComponent<TextMeshProUGUI>();
-            health = GameObject.Find("HealthCount").GetComponent<TextMeshProUGUI>();
-            attackPower = GameObject.Find("AttackPower").GetComponent<TextMeshProUGUI>();
+
+            GameObject healthObj = GameObject.Find("HealthCount");
+            if (healthObj != null)
+                health = healthObj.GetComponent<TextMeshProUGUI>();
+
+            GameObject attackObj = GameObject.Find("AttackPower");
+            if (attackObj != null)
+                attackPower = attackObj.GetComponent<TextMeshProUGUI>();
         }
 
-        void Update()
+        private void Update()
         {
+            if (PlayerСharacteristics.Instance == null)
+                return;
+
             if (attackPower != null)
-            {
                 attackPower.text = PlayerСharacteristics.Instance.strength.ToString();
-            }
+
             if (health != null)
-            {
                 health.text = PlayerСharacteristics.Instance.healthPoints.ToString();
-            }
+
             if (winsText != null)
-            {
                 winsText.text = PlayerСharacteristics.Instance.numberOfWins.ToString();
-            }
-            else
-            {
-                Debug.LogError("Компонент TextMeshProUGUI не найден!");
-            }
         }
     }
 }
