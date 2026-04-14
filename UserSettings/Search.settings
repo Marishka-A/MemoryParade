@@ -1,6 +1,5 @@
 trackSelection = true
 refreshSearchWindowsInPlayMode = false
-pickerAdvancedUI = false
 fetchPreview = true
 defaultFlags = 0
 keepOpen = true
@@ -9,6 +8,9 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
+	"last_search.408DD963" = "LoadScene(\"Boot\")"
+	"OpenInspectorPreview.408DD963" = "0"
+	"currentGroup.408DD963" = "all"
 }
 providers = {
 	asset = {
@@ -60,14 +62,13 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"LoadScene(\"Boot\")"
 ]
 searchItemFavorites = [
 ]
 savedSearchesSortOrder = 0
 showSavedSearchPanel = false
 hideTabs = false
-indexOnEditorStartup = true
-logIndexingPerformanceReport = false
 expandedQueries = [
 ]
 queryBuilder = true
@@ -76,4 +77,3 @@ helperWidgetCurrentArea = "all"
 disabledIndexers = ""
 minIndexVariations = 2
 findProviderIndexHelper = true
-itemIconSize = 32
