@@ -1618,6 +1618,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 926680141}
+  - component: {fileID: 926680147}
   - component: {fileID: 926680144}
   - component: {fileID: 926680143}
   - component: {fileID: 926680142}
@@ -1752,6 +1753,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 926680140}
   m_CullTransparentMesh: 1
+--- !u!114 &926680147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 926680140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 424edd7dde1c7174996df276e3e62887, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  requiredShards: 12
+  mainMenuSceneName: MainMenu
+  winDelay: 2.5
+  winPanel: {fileID: 349734912}
+  winText: {fileID: 20605097}
 --- !u!1 &1017049616
 GameObject:
   m_ObjectHideFlags: 0
@@ -2353,7 +2371,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1418257030}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 926680147}
+        m_TargetAssemblyTypeName: BarrierWinTrigger, Assembly-CSharp
+        m_MethodName: DepositShards
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1418257030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3147,10 +3177,10 @@ MonoBehaviour:
   strength: 10
   mana: 30
   maxMana: 30
-  slimeKills: 0
-  firstSlimeBonusGiven: 0
-  allSlimesBonusGiven: 0
-  numberOfWins: 0
+  slimeKills: 8
+  firstSlimeBonusGiven: 1
+  allSlimesBonusGiven: 1
+  numberOfWins: 8
 --- !u!1 &2024881156
 GameObject:
   m_ObjectHideFlags: 0

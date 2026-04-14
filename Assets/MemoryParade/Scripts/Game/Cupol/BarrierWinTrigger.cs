@@ -8,37 +8,31 @@ public class BarrierWinTrigger : MonoBehaviour
     [SerializeField] private int requiredShards = 12;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private float winDelay = 2.5f;
+
+    [Header("UI")]
     [SerializeField] private GameObject winPanel;
     [SerializeField] private TextMeshProUGUI winText;
 
-    private bool playerInside = false;
     private bool winStarted = false;
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void Start()
     {
-        if (!other.CompareTag("Player"))
-            return;
-
-        playerInside = true;
+        if (winPanel != null)
+            winPanel.SetActive(false);
     }
 
-    private void OnTriggerExit2D(Collider2D other)
+    // 👉 ЭТО БУДЕТ ВЫЗЫВАТЬ КНОПКА "ПОПОЛНИТЬ"
+    public void DepositShards()
     {
-        if (!other.CompareTag("Player"))
+        if (winStarted)
             return;
 
-        playerInside = false;
-    }
-
-    private void Update()
-    {
-        if (!playerInside || winStarted)
+        if (PlayerСharacteristics.Instance == null)
             return;
 
-        if (!Input.GetKeyDown(KeyCode.E))
-            return;
+        int shards = PlayerСharacteristics.Instance.numberOfWins;
 
-        if (ShardProgress.PlayerShards < requiredShards)
+        if (shards < requiredShards)
         {
             Debug.Log("Недостаточно осколков");
             return;
@@ -51,14 +45,16 @@ public class BarrierWinTrigger : MonoBehaviour
     {
         winStarted = true;
 
-        // Если нужно, можно обнулить осколки после возврата в барьер
-        ShardProgress.PlayerShards = 0;
-
         if (winPanel != null)
             winPanel.SetActive(true);
 
         if (winText != null)
-            winText.text = "Поздравляю, вы выиграли!";
+            winText.text = "Победа!";
+
+        // Останавливаем игрока
+        CharacterMove move = FindAnyObjectByType<CharacterMove>();
+        if (move != null)
+            move.enabled = false;
 
         yield return new WaitForSeconds(winDelay);
 
